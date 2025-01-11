@@ -34,8 +34,6 @@ app.get("/", (req, res) => {
 });
 
 
-
-
 // Fetch particular coin data  ------------------->    '/ stats ? coin=bitcoin '
 app.get("/stats", async (req, res) => {
 
@@ -87,6 +85,84 @@ app.get("/stats", async (req, res) => {
       "Invalid or missing coin parameter. Must be one of: bitcoin, matic-network, ethereum.",
   });
 });
+
+
+
+// Fetch Standard Deviation of particular coin data  ------------------->    '/ deviation ? coin=bitcoin '
+app.get("/deviation", async (req, res) => {
+
+  const { coin } = req.query;  //Get the coin queryParam
+  
+  // Check for valid Coin
+  if (["bitcoin", "ethereum", "matic-network"].includes(coin)) { 
+
+    console.log("valid")
+  
+    try {
+  
+      var fet = { _id: 0 }; // Defining columns to be retrieve
+      
+      fet[coin] = {};
+      fet[coin]["currentPrice"] = 1;
+
+      console.log(fet)
+
+      const crypto = await CryptoData.find({}, fet) //Fetching Data from MongoDB
+        .sort({ timestamp: -1 }) // Sorts the documents 
+        .limit(100) // Gets latest 100 documents
+        .exec();
+  
+        if (crypto) {
+          
+          // Extract Prices from the list of documents containing nested objects
+          const prices = crypto.map((data)=>data[coin]["currentPrice"])
+          
+          console.log(crypto,prices) // for troubleshooting
+
+          
+          // Calculate the standard deviation
+          const mean = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+          const variance = prices.reduce((sum, price) => sum + Math.pow(price - mean, 2), 0) / prices.length;
+          const standardDeviation = Math.sqrt(variance);
+
+
+          // 200 sending the calculated deviation
+          return res.status(200).json({
+            deviation: parseFloat(standardDeviation.toFixed(5)),
+        });
+      
+        }
+      
+        return res.status(404).json({
+          // Else 404 code when not found
+          error: `No data found for the requested cryptocurrency: ${coin}`,
+      
+        });
+        
+        // Any Error while retrieveing
+      } catch (error) {
+      
+        console.error("Error fetching cryptocurrency data:", error);
+      
+        return res.status(400).json({
+
+          error: "Error in fetching Data",
+
+        });
+    }
+  }
+
+  // If {coin} "query param" is empty or Invalid
+  return res.status(400).json({
+    error:
+      "Invalid or missing coin parameter. Must be one of: bitcoin, matic-network, ethereum.",
+  });
+});
+
+
+
+
+
 
 
 
