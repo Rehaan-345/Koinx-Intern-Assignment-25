@@ -22,7 +22,7 @@ app.use(express.json());
 // MongoDB setup
 mongoose
   .connect(MONGO)
-  .then(() => console.log("MongoDB connected"))
+  .then(() => console.log("MongoDB connected\n"))
   .catch((error) => console.error("MongoDB connection error:", error));
 
 
@@ -30,6 +30,7 @@ mongoose
 
 // Default Adress  ------------------------------->     '/' Index,Home
 app.get("/", (req, res) => {
+  console.log("/")
   res.send("Server Running...");
 });
 
@@ -39,10 +40,12 @@ app.get("/stats", async (req, res) => {
 
   const { coin } = req.query;  //Get the coin queryParam
   
+  var rout=`/stats/?coin=${coin}`;
+  
   // Check for valid Coin
   if (["bitcoin", "ethereum", "matic-network"].includes(coin)) { 
 
-    console.log("valid")
+    rout+=" is valid"
   
     try {
   
@@ -56,9 +59,12 @@ app.get("/stats", async (req, res) => {
   
         if (crypto) {
           // If data found RETURN data with 200
+          console.log(rout+", result : "+crypto[coin]+"\n")
           return res.status(200).json(crypto[coin]);
       
         }
+
+        console.log(rout+", result : No data found \n")
       
         return res.status(404).json({
           // Else 404 code when not found
@@ -69,7 +75,7 @@ app.get("/stats", async (req, res) => {
         // Any Error while retrieveing
       } catch (error) {
       
-        console.error("Error fetching cryptocurrency data:", error);
+        console.error(rout+" Error fetching cryptocurrency data:", error);
       
         return res.status(400).json({
 
@@ -80,6 +86,7 @@ app.get("/stats", async (req, res) => {
   }
 
   // If {coin} "query param" is empty or Invalid
+  console.log(rout+" is Invalid\n")
   return res.status(400).json({
     error:
       "Invalid or missing coin parameter. Must be one of: bitcoin, matic-network, ethereum.",
@@ -93,10 +100,12 @@ app.get("/deviation", async (req, res) => {
 
   const { coin } = req.query;  //Get the coin queryParam
   
+  var rout=`/deviation/?coin=${coin}`;
+
   // Check for valid Coin
   if (["bitcoin", "ethereum", "matic-network"].includes(coin)) { 
 
-    console.log("valid")
+    rout+=" is valid"
   
     try {
   
@@ -105,27 +114,29 @@ app.get("/deviation", async (req, res) => {
       fet[coin] = {};
       fet[coin]["currentPrice"] = 1;
 
-      console.log(fet)
 
       const crypto = await CryptoData.find({}, fet) //Fetching Data from MongoDB
         .sort({ timestamp: -1 }) // Sorts the documents 
         .limit(100) // Gets latest 100 documents
         .exec();
   
-        if (crypto) {
+        // Extract Prices from the list of documents containing nested objects
+        const prices = crypto.map((data)=>data[coin]["currentPrice"])
+        
+        
+        if (prices.length) {
           
-          // Extract Prices from the list of documents containing nested objects
-          const prices = crypto.map((data)=>data[coin]["currentPrice"])
           
-          console.log(crypto,prices) // for troubleshooting
-
           
           // Calculate the standard deviation
           const mean = prices.reduce((sum, price) => sum + price, 0) / prices.length;
           const variance = prices.reduce((sum, price) => sum + Math.pow(price - mean, 2), 0) / prices.length;
           const standardDeviation = Math.sqrt(variance);
+          
 
 
+          console.log(rout+", result : "+standardDeviation+"\n")
+          
           // 200 sending the calculated deviation
           return res.status(200).json({
             deviation: parseFloat(standardDeviation.toFixed(5)),
@@ -133,6 +144,8 @@ app.get("/deviation", async (req, res) => {
       
         }
       
+        console.log(rout+", result : No data found\n")
+
         return res.status(404).json({
           // Else 404 code when not found
           error: `No data found for the requested cryptocurrency: ${coin}`,
@@ -142,7 +155,7 @@ app.get("/deviation", async (req, res) => {
         // Any Error while retrieveing
       } catch (error) {
       
-        console.error("Error fetching cryptocurrency data:", error);
+        console.error(rout+" Error fetching cryptocurrency data:", error);
       
         return res.status(400).json({
 
@@ -153,6 +166,7 @@ app.get("/deviation", async (req, res) => {
   }
 
   // If {coin} "query param" is empty or Invalid
+  console.log(rout+" is Invalid\n")
   return res.status(400).json({
     error:
       "Invalid or missing coin parameter. Must be one of: bitcoin, matic-network, ethereum.",
@@ -169,19 +183,17 @@ app.get("/deviation", async (req, res) => {
 
 // CRON Funtion defination
 // 0(minutes) */2(every 2 hours)
-cron.schedule("0 */2 * * *", async function jobYouNeedToExecute() {
+cron.schedule("*/1 * * * *", async function jobYouNeedToExecute() {
   try {
 
     const response = await axios.get(API); // Fetch details at equal intervals of time (2 Hours)
     const data = response.data;
 
-    console.log(data);
+    console.log("\n",data);
     var u_data = [];  // To store individual coins data
     
     for (const [coinId, details] of Object.entries(data)) {
-    
-      console.log([coinId, details]);
-    
+       
       u_data.push({
         currentPrice: details.usd,
         marketCap: details.usd_market_cap,
@@ -200,7 +212,7 @@ cron.schedule("0 */2 * * *", async function jobYouNeedToExecute() {
 
     console.log(u_data);
 
-    console.log("Crypto data fetched and stored successfully.");
+    console.log("Crypto data fetched and stored successfully.\n");
 
   } catch (error) {
     
