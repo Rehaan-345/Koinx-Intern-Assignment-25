@@ -183,7 +183,7 @@ app.get("/deviation", async (req, res) => {
 
 // CRON Funtion defination
 // 0(minutes) */2(every 2 hours)
-cron.schedule("*/1 * * * *", async function jobYouNeedToExecute() {
+cron.schedule("0 */2 * * *", async function jobYouNeedToExecute() {
   try {
 
     const response = await axios.get(API); // Fetch details at equal intervals of time (2 Hours)
