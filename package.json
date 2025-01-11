@@ -5,5 +5,16 @@
     "express": "^4.21.2",
     "mongoose": "^8.9.4",
     "node-cron": "^3.0.3"
-  }
+  },
+  "name": "koinx-intern-assignment-25",
+  "version": "1.0.0",
+  "description": "Assignment for Intern Opportunity at koinx 2025",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
 }
