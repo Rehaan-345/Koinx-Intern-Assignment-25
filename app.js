@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const cron = require("node-cron");
 const mongoose = require("mongoose");
+const cors = require('cors');
 const CryptoData = require("./src/models/CryptoData");
 // LIBRARIES
 
@@ -16,6 +17,10 @@ const MONGO = process.env.MONGO_URI;
 // Express App Intialisation
 const app = express();
 app.use(express.json());
+app.use(express.static('public'));
+
+// Enable CORS for all routes
+app.use(cors()); // This will allow all origins
 
 
 
@@ -227,4 +232,4 @@ cron.schedule("0 */2 * * *", async function jobYouNeedToExecute() {
 
 
 // Running of Express Object
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT,"0.0.0.0", () => console.log(`Server running on port ${PORT}`),);

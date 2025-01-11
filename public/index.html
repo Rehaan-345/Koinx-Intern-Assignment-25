@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto API Showcase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .radio-group {
+            margin: 10px 0;
+        }
+
+        .radio-group label {
+            display: block;
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            margin-top: 15px;
+            color: #333;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Crypto API Showcase</h1> <!-- GitHub logo linked to the repository -->
+    <a href="https://github.com/Rehaan-345/Koinx-Intern-Assignment-25" target="_blank">
+      <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub Logo" width="100" height="100">
+    </a>
+
+    <!-- Stats API Card -->
+    <div class="card">
+        <h2>Stats API</h2>
+        <div class="radio-group">
+            <label><input type="radio" name="stats-coin" value="bitcoin"> Bitcoin</label>
+            <label><input type="radio" name="stats-coin" value="ethereum"> Ethereum</label>
+            <label><input type="radio" name="stats-coin" value="matic-network"> Matic Network</label>
+        </div>
+        <button onclick="fetchStats()">Get Stats</button>
+        <div id="stats-result" class="result"></div>
+    </div>
+
+    <!-- Deviation API Card -->
+    <div class="card">
+        <h2>Deviation API</h2>
+        <div class="radio-group">
+            <label><input type="radio" name="deviation-coin" value="bitcoin"> Bitcoin</label>
+            <label><input type="radio" name="deviation-coin" value="ethereum"> Ethereum</label>
+            <label><input type="radio" name="deviation-coin" value="matic-network"> Matic Network</label>
+        </div>
+        <button onclick="fetchDeviation()">Get Deviation</button>
+        <div id="deviation-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://192.168.1.5:5000";
+
+        // Fetch Stats API
+        async function fetchStats() {
+            const coin = document.querySelector('input[name="stats-coin"]:checked');
+            const resultDiv = document.getElementById("stats-result");
+
+            if (!coin) {
+                resultDiv.textContent = "Please select a coin.";
+                return;
+            }
+
+            resultDiv.textContent = "Fetching...";
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats?coin=${coin.value}`);
+                const data = await response.json();
+                if (response.ok) {
+                    // Format the output data
+                    const formattedPrice = formatCurrency(data.currentPrice);
+                    const formattedMarketCap = formatCurrency(data.marketCap);
+                    const formattedChange = data.change24h.toFixed(2);
+
+                    resultDiv.innerHTML = `
+        <strong>Current Price:</strong> ${formattedPrice}<br>
+        <strong>Market Cap:</strong> ${formattedMarketCap}<br>
+        <strong>24h Change:</strong> ${formattedChange}%`;
+                } else {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = "Error fetching stats.";
+            }
+        }
+
+        // Helper function to format numbers as currency
+        function formatCurrency(amount) {
+            return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Fetch Deviation API
+        async function fetchDeviation() {
+            const coin = document.querySelector('input[name="deviation-coin"]:checked');
+            const resultDiv = document.getElementById("deviation-result");
+
+            if (!coin) {
+                resultDiv.textContent = "Please select a coin.";
+                return;
+            }
+
+            resultDiv.textContent = "Fetching...";
+            try {
+                const response = await fetch(`${API_BASE_URL}/deviation?coin=${coin.value}`);
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.innerHTML = `<strong>Standard Deviation:</strong> ${data.deviation}`;
+                } else {
+                    resultDiv.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = "Error fetching deviation.";
+            }
+        }
+    </script>
+</body>
+
+</html>
